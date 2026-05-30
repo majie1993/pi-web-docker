@@ -1,6 +1,7 @@
 # pi-web + pi coding agent 一体化镜像
-# pi 要求 Node >= 22.19，使用 22 系列 slim 基础镜像
-FROM node:22-bookworm-slim
+# pi 要求 Node >= 22.19；选 24 是因为它才内置了 NODE_USE_ENV_PROXY，
+# 能让原生 fetch 读 HTTP(S)_PROXY 环境变量（pi 自身完全不处理代理）
+FROM node:24-bookworm-slim
 
 # pi agent 需要 git 等基础工具来操作工作区；ripgrep 供其搜索能力使用
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,6 +35,12 @@ RUN printf '#!/bin/sh\nexit 0\n' > /usr/local/bin/xdg-open \
 ENV HOME=/data
 RUN mkdir -p /data && chmod 777 /data
 VOLUME ["/data"]
+
+# 让 Node 原生 fetch 识别 HTTP_PROXY/HTTPS_PROXY/NO_PROXY 环境变量。
+# pi 用裸 fetch 调 OpenAI/Anthropic，自身不处理代理；不设此项时代理会被无视，
+# 在受限地区会触发 OpenAI 的 unsupported_country_region_territory 403。
+# 未配置代理环境变量时此开关无副作用。
+ENV NODE_USE_ENV_PROXY=1
 
 # 容器内监听所有网卡，真正的对外暴露范围由 docker run -p 控制
 ENV PORT=30141
