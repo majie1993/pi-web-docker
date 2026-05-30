@@ -35,6 +35,19 @@ docker compose up -d
 cloudflared tunnel --url http://localhost:30141
 ```
 
+## 通过代理访问（受限网络）
+
+在中国大陆等受限网络，OpenAI / Anthropic 会按出口 IP 拦截。本镜像支持配置代理，会用 `proxychains` 在系统调用层强制**所有**出站流量走代理——这能绕过 Next.js 自带 undici 不读 `HTTP_PROXY` 环境变量的坑（否则 pi-web 的 OAuth 登录会报 `unsupported_country_region_territory`）。
+
+在 compose 的 `environment` 里设置代理地址即可（支持 `http` / `socks5`）：
+
+```yaml
+    environment:
+      PI_PROXY: "http://192.168.x.x:1082"     # 或 socks5://...
+```
+
+> 代理的**落地地区必须是服务商支持的**（如美 / 日 / 新；⚠️ 香港、中国大陆 OpenAI 均不支持）。未设置代理时镜像直接启动，不受影响。
+
 ## 数据与密钥
 
 | 路径 | 说明 |

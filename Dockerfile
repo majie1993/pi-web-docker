@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         ca-certificates \
         ripgrep \
+        proxychains-ng \
     && rm -rf /var/lib/apt/lists/*
 
 # 显式锁定公共 npm 源，避免在内网环境构建时误继承私有 .npmrc
@@ -46,9 +47,13 @@ ENV NODE_USE_ENV_PROXY=1
 ENV PORT=30141
 EXPOSE 30141
 
+# 入口脚本：按需用 proxychains 包住 pi-web，强制出站走代理
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # agent 默认操作的工作目录
 WORKDIR /workspace
 
 # 监听 0.0.0.0 是为了让宿主机 -p 端口映射可达；
 # 安全边界在宿主侧（绑定 127.0.0.1 + 隧道），不在容器内
-CMD ["pi-web", "--hostname", "0.0.0.0", "--port", "30141"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
