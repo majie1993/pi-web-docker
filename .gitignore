@@ -1,0 +1,10 @@
+# 绝不提交：密钥、会话数据、运行时挂载目录
+data/
+.pi/
+models.json
+.env
+*.local
+
+# OS
+.DS_Store
+._*

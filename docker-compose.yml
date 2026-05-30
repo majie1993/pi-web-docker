@@ -1,0 +1,15 @@
+services:
+  pi-web:
+    # 本地构建用 build，用 CI 推好的镜像则改用 image（注释二选一）
+    build: .
+    # image: ghcr.io/<your-github-name>/pi-web-docker:latest
+    container_name: pi-web
+    ports:
+      # 只绑定到宿主机本地回环：公网访问不到，远程经隧道转发
+      - "127.0.0.1:30141:30141"
+    volumes:
+      # 持久化 ~/.pi —— 会话记录、models.json、API key 都在这里
+      - ./data:/data
+      # 可选：把要让 agent 操作的项目挂进来
+      # - ./workspace:/workspace
+    restart: unless-stopped

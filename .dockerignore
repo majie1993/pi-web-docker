@@ -1,0 +1,11 @@
+# 镜像内不需要的东西，避免 build context 过大或泄露
+.git
+.github
+data
+.pi
+*.md
+.gitignore
+.dockerignore
+docker-compose.yml
+.env
+.DS_Store
