@@ -4,12 +4,19 @@ services:
     image: ghcr.io/majie1993/pi-web-docker:latest
     # build: .
     container_name: pi-web
+    # 以你的 fnOS 账号身份运行：写出来的文件属主是 admin:Users，而非 root
+    user: "1000:1001"
+    # 额外加入 Administrators 组，便于访问归属管理员组的文件
+    group_add:
+      - "1000"
+    # 默认工作目录指向挂进来的 NAS 数据区
+    working_dir: /nas
     ports:
       # 只绑定到宿主机本地回环：公网访问不到，远程经隧道转发
       - "127.0.0.1:30141:30141"
     volumes:
-      # 持久化 ~/.pi —— 会话记录、models.json、API key 都在这里
+      # pi 自己的会话记录、models.json、API key
       - ./data:/data
-      # 可选：把要让 agent 操作的项目挂进来
-      # - ./workspace:/workspace
+      # fnOS 存储卷，pi 在 /nas 下读写
+      - /vol1:/nas
     restart: unless-stopped
