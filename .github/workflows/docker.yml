@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  schedule:
+    # 每天一次（UTC 18:00 = 北京时间 02:00），自动追踪上游新版
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,6 +19,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: docker/setup-buildx-action@v3
+
+      - name: Resolve upstream versions
+        id: ver
+        run: |
+          echo "pi_web=$(npm view @agegr/pi-web version)" >> "$GITHUB_OUTPUT"
+          echo "pi_agent=$(npm view @earendil-works/pi-coding-agent version)" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -31,6 +40,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=piweb-${{ steps.ver.outputs.pi_web }}
             type=ref,event=tag
             type=sha,format=short
 
@@ -41,5 +51,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PI_WEB_VERSION=${{ steps.ver.outputs.pi_web }}
+            PI_AGENT_VERSION=${{ steps.ver.outputs.pi_agent }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
