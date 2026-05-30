@@ -23,6 +23,12 @@ RUN npm install -g \
         @earendil-works/pi-coding-agent@${PI_AGENT_VERSION} \
     && npm cache clean --force
 
+# pi-web 启动就绪后会 spawn `xdg-open` 自动打开浏览器，且未对该子进程挂 error 处理。
+# 容器内没有 xdg-open 时 spawn 报 ENOENT，会触发未捕获异常使进程崩溃重启。
+# 放一个 no-op 的 xdg-open 占位，让 spawn 成功但不做任何事。
+RUN printf '#!/bin/sh\nexit 0\n' > /usr/local/bin/xdg-open \
+    && chmod +x /usr/local/bin/xdg-open
+
 # 把 HOME 指到 /data，这样 pi / pi-web 默认读写的 ~/.pi 会落在 /data/.pi
 # 会话记录、models.json、API key 都存在这里，通过 volume 持久化
 ENV HOME=/data
